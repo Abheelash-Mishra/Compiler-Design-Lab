@@ -1,136 +1,74 @@
 #include <iostream>
-#include <stack>
-#include <string>
-#include <cctype>
 
-using namespace std;
-
-struct Node {
-    char value;
+// Define structure
+struct Node
+{
+    char data;
     Node* left;
     Node* right;
 };
 
-Node* newNode(char value) {
-    Node* node = new Node;
-    node->value = value;
-    node->left = node->right = nullptr;
-    return node;
+// Create new node
+Node* createNode(char data)
+{
+    Node* newNode = new Node;
+    newNode->data = data;
+    newNode->left = nullptr;
+    newNode->right = nullptr;
+    return newNode;
 }
 
-bool isOperator(char c) {
-    return c == '+' || c == '-' || c == '*' || c == '/';
-}
-
-int precedence(char c) {
-    if (c == '+' || c == '-')
-        return 1;
-    else if (c == '*' || c == '/')
-        return 2;
-    else
+// Function to traverse the syntax tree and perform arithmetic operations
+int evaluate(Node* root)
+{
+    if (root == nullptr)
         return 0;
-}
 
-string infixToPostfix(const string& expression) {
-    string postfix;
-    stack<char> stack;
-
-    for (char c : expression) {
-        if (isalnum(c)) {
-            postfix += c;
-        } else if (c == '(') {
-            stack.push(c);
-        } else if (c == ')') {
-            while (!stack.empty() && stack.top() != '(') {
-                postfix += stack.top();
-                stack.pop();
-            }
-            stack.pop(); // Pop '('
-        } else {
-            while (!stack.empty() && precedence(stack.top()) >= precedence(c)) {
-                postfix += stack.top();
-                stack.pop();
-            }
-            stack.push(c);
-        }
+    // If the node is a number, return its value
+    if (root->data >= '0' && root->data <= '9')
+    {
+        return root->data - '0';
     }
-
-    while (!stack.empty()) {
-        postfix += stack.top();
-        stack.pop();
-    }
-
-    return postfix;
-}
-
-Node* constructTree(const string& postfix) {
-    stack<Node*> stack;
-
-    for (char c : postfix) {
-        if (isalnum(c)) {
-            stack.push(newNode(c));
-        } else {
-            Node* right = stack.top();
-            stack.pop();
-            Node* left = stack.top();
-            stack.pop();
-
-            Node* node = newNode(c);
-            node->right = right;
-            node->left = left;
-            stack.push(node);
-        }
-    }
-
-    return stack.top();
-}
-
-int evaluate(Node* root) {
-    if (!root)
-        return 0;
-    if (!root->left && !root->right)
-        return root->value - '0';
 
     int leftValue = evaluate(root->left);
     int rightValue = evaluate(root->right);
 
-    switch (root->value) {
-        case '+': return leftValue + rightValue;
-        case '-': return leftValue - rightValue;
-        case '*': return leftValue * rightValue;
-        case '/': return leftValue / rightValue;
-        default: return 0;
+    // Perform arithmetic operations based on the operator
+    switch (root->data)
+    {
+    case '+':
+        return leftValue + rightValue;
+    case '-':
+        return leftValue - rightValue;
+    case '*':
+        return leftValue * rightValue;
+    case '/':
+        if (rightValue != 0)
+        {
+            return leftValue / rightValue;
+        }
+        else
+        {
+            std::cerr << "Error: Division by zero\n";
+            exit(EXIT_FAILURE);
+        }
+    default:
+        std::cerr << "Error: Invalid operator\n";
+        exit(EXIT_FAILURE);
     }
 }
 
-void printSyntaxTree(Node* root, int depth) {
-    if (!root)
-        return;
-
-    const int SPACING = 4;
-
-    printSyntaxTree(root->right, depth + 1);
-
-    cout << string(depth * SPACING, ' ') << root->value << endl;
-
-    printSyntaxTree(root->left, depth + 1);
-}
-
-int main() {
-    string infix_expression;
-    cout << "Enter the infix expression: ";
-    getline(cin, infix_expression);
-
-    string postfix_expression = infixToPostfix(infix_expression);
-    cout << "Postfix expression: " << postfix_expression << endl;
-
-    Node* root = constructTree(postfix_expression);
-
-    cout << "Syntax tree:" << endl;
-    printSyntaxTree(root, 0);
+int main()
+{
+    // Construct the syntax tree for the expression "((3+2)*5)"
+    Node* root = createNode('*');
+    root->left = createNode('+');
+    root->right = createNode('5');
+    root->left->left = createNode('3');
+    root->left->right = createNode('2');
 
     int result = evaluate(root);
-    cout << "Result: " << result << endl;
+    std::cout << "Result: " << result << std::endl;
 
     return 0;
 }
